@@ -1,7 +1,7 @@
 maptilersdk.config.apiKey = maptilerApiKey;
 
 const map = new maptilersdk.Map({
-  container: "map",
+  container: "show-map",
   style: maptilersdk.MapStyle.STREETS,
   center: campground.geometry.coordinates,
   zoom: 10,
