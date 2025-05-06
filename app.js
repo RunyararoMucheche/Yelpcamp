@@ -13,6 +13,7 @@ const ExpressError = require("./utilities/ExpressError");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user");
+const mongoSanitize = require("@exortek/express-mongo-sanitize");
 
 const userRoutes = require("./routes/users");
 const campgroundRoutes = require("./routes/campgrounds");
@@ -34,6 +35,15 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname, "public")));
+app.use(
+  mongoSanitize({
+    onSanitize: ({ req, key }) => {
+      console.warn(`Sanitized ${key} from request`);
+    },
+    replaceWith: "_",
+    allowDots: true,
+  })
+);
 
 const sessionConfig = {
   secret: "thisshouldbeabettersecret",
@@ -62,6 +72,16 @@ app.use((req, res, next) => {
   res.locals.error = req.flash("error");
   next();
 });
+
+// app.use((req, res, next) => {
+//   if (req.body) {
+//     req.body = mongoSanitize.sanitize(req.body);
+//   }
+//   if (req.params) {
+//     req.params = mongoSanitize.sanitize(req.params);
+//   }
+//   next();
+// });
 
 app.get("/fakeuser", async (req, res) => {
   const user = new User({ email: "billy@outlook.com", username: "billyTein" });
