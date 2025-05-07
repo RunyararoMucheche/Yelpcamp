@@ -73,16 +73,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// app.use((req, res, next) => {
-//   if (req.body) {
-//     req.body = mongoSanitize.sanitize(req.body);
-//   }
-//   if (req.params) {
-//     req.params = mongoSanitize.sanitize(req.params);
-//   }
-//   next();
-// });
-
 app.get("/fakeuser", async (req, res) => {
   const user = new User({ email: "billy@outlook.com", username: "billyTein" });
   const newUser = await User.register(user, "pokemon");
