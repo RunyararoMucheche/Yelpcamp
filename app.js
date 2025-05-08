@@ -14,12 +14,16 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user");
 const mongoSanitize = require("@exortek/express-mongo-sanitize");
+const helmet = require("helmet");
+const dbUrl = "mongodb://127.0.0.1:27017/yelp-camp";
 
 const userRoutes = require("./routes/users");
 const campgroundRoutes = require("./routes/campgrounds");
 const reviewRoutes = require("./routes/reviews");
 
-mongoose.connect("mongodb://127.0.0.1:27017/yelp-camp");
+const MongoDBStore = require("connect-mongo")(session);
+
+mongoose.connect(dbUrl);
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error"));
@@ -45,12 +49,25 @@ app.use(
   })
 );
 
+const store = new MongoDBStore({
+  url: dbUrl,
+  secret: "thisshouldbeabettersecret",
+  touchAfter: 24 * 60 * 60,
+});
+
+store.on("error", function (e) {
+  console.log("SESSION STORE ERROR", e);
+});
+
 const sessionConfig = {
+  store,
+  name: "session",
   secret: "thisshouldbeabettersecret",
   resave: false,
   saveUninitialized: true,
   cookie: {
     httpOnly: true,
+    // secure: true,
     expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
     maxAge: 1000 * 60 * 60 * 24 * 7,
   },
@@ -58,6 +75,51 @@ const sessionConfig = {
 
 app.use(session(sessionConfig));
 app.use(flash());
+app.use(helmet());
+
+const scriptSrcUrls = [
+  "https://stackpath.bootstrapcdn.com/",
+  "https://kit.fontawesome.com/",
+  "https://cdnjs.cloudflare.com/",
+  "https://cdn.jsdelivr.net",
+  "https://cdn.maptiler.com/", // add this
+];
+
+const styleSrcUrls = [
+  "https://kit-free.fontawesome.com/",
+  "https://stackpath.bootstrapcdn.com/",
+  "https://fonts.googleapis.com/",
+  "https://use.fontawesome.com/",
+  "https://cdn.jsdelivr.net",
+  "https://cdn.maptiler.com/", // add this
+];
+
+const connectSrcUrls = [
+  "https://api.maptiler.com/", // add this
+];
+
+const fontSrcUrls = [];
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: [],
+      connectSrc: ["'self'", ...connectSrcUrls],
+      scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
+      styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
+      workerSrc: ["'self'", "blob:"],
+      objectSrc: [],
+      imgSrc: [
+        "'self'",
+        "blob:",
+        "data:",
+        "https://res.cloudinary.com/dagyxnnmu/", //SHOULD MATCH YOUR CLOUDINARY ACCOUNT!
+        "https://images.unsplash.com/",
+        "https://api.maptiler.com/",
+      ],
+      fontSrc: ["'self'", ...fontSrcUrls],
+    },
+  })
+);
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -71,12 +133,6 @@ app.use((req, res, next) => {
   res.locals.success = req.flash("success");
   res.locals.error = req.flash("error");
   next();
-});
-
-app.get("/fakeuser", async (req, res) => {
-  const user = new User({ email: "billy@outlook.com", username: "billyTein" });
-  const newUser = await User.register(user, "pokemon");
-  res.send(newUser);
 });
 
 app.use("/", userRoutes);

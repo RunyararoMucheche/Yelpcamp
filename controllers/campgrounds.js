@@ -51,7 +51,9 @@ module.exports.renderEditForm = async (req, res) => {
     req.flash("error", "Campground cannot be found!");
     return res.redirect("/campgrounds");
   }
-  res.render("campgrounds/edit", { campground });
+  res.render("campgrounds/edit", {
+    campground: campground.toObject({ virtuals: true }),
+  });
 };
 
 module.exports.updateCampground = async (req, res) => {
