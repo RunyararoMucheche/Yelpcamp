@@ -79,4 +79,4 @@ npm run dev
 
 - GitHub: [RunyararoMucheche](https://github.com/RunyararoMucheche)
 - Upwork Portfolio: [Runyararo Mucheche](https://www.upwork.com/freelancers/~013a0b5a6014152ba5)
-- LinkedIn: (https://www.linkedin.com/in/runya-mucheche/)
+- LinkedIn: [Runyararo Mucheche](https://www.linkedin.com/in/runya-mucheche/)
